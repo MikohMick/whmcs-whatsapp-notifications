@@ -91,9 +91,9 @@ Transform your WHMCS billing system with professional WhatsApp notifications tha
 
 | Setting | Description | Example |
 |---------|-------------|---------|
-| **WhatsApp API Token** | Your MessageMarvel API token | `VLoqcIJh...` |
+| **WhatsApp API Token** | Your MessageMarvel API token | `VJFGtIJh...` |
 | **Company Name** | Your business name | `Mick Hosting` |
-| **Support Phone** | Your support number | `0794988063` |
+| **Support Phone** | Your support number | `0712345678` |
 | **Website URL** | Your website URL | `https://mickhosting.com` |
 
 ### Notification Controls
@@ -215,25 +215,11 @@ composer install
 phpunit tests/
 ```
 
-## 📚 Documentation
-
-- [Installation Guide](docs/installation.md)
-- [Configuration Reference](docs/configuration.md)
-- [API Documentation](docs/api.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [FAQ](docs/faq.md)
-
 ## 🐛 Support
 
-### Free Support
-- 📖 [Documentation](docs/)
-- 💬 [GitHub Issues](https://github.com/your-username/whmcs-whatsapp-notifications/issues)
-- 🗨️ [GitHub Discussions](https://github.com/your-username/whmcs-whatsapp-notifications/discussions)
 
 ### Premium Support
 - 📧 [MessageMarvel Support](mailto:support@messagemarvel.com)
-- 🌐 [MessageMarvel Documentation](https://messagemarvel.com/docs)
-- 💬 [Live Chat](https://messagemarvel.com/support)
 
 ## 📄 License
 
@@ -249,7 +235,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **MessageMarvel API**: [https://messagemarvel.com/](https://messagemarvel.com/)
 - **WHMCS**: [https://www.whmcs.com/](https://www.whmcs.com/)
-- **WhatsApp Business**: [https://business.whatsapp.com/](https://business.whatsapp.com/)
 
 ---
 
