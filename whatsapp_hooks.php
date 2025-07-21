@@ -490,9 +490,30 @@ add_hook('InvoiceCreation', 1, function($vars) {
 });
 
 /**
- * Hook: Invoice Paid
+ * Hook: Add Invoice Payment - Most reliable for automatic payments
+ */
+add_hook('AddInvoicePayment', 1, function($vars) {
+    whatsapp_send_payment_confirmation($vars['invoiceid'], 'payment-applied');
+});
+
+/**
+ * Hook: Invoice Paid - After payment processing and emails
  */
 add_hook('InvoicePaid', 1, function($vars) {
+    whatsapp_send_payment_confirmation($vars['invoiceid'], 'post-email');
+});
+
+/**
+ * Hook: Invoice Paid Pre Email - Before payment emails are sent
+ */
+add_hook('InvoicePaidPreEmail', 1, function($vars) {
+    whatsapp_send_payment_confirmation($vars['invoiceid'], 'pre-email');
+});
+
+/**
+ * Send WhatsApp payment confirmation template
+ */
+function whatsapp_send_payment_confirmation($invoiceId, $type = 'unknown') {
     // Get addon settings
     $settings = \WHMCS\Database\Capsule::table('tbladdonmodules')
         ->where('module', 'whatsapp_notification')
@@ -502,7 +523,7 @@ add_hook('InvoicePaid', 1, function($vars) {
         return;
     }
     
-    $invoice = \WHMCS\Database\Capsule::table('tblinvoices')->where('id', $vars['invoiceid'])->first();
+    $invoice = \WHMCS\Database\Capsule::table('tblinvoices')->where('id', $invoiceId)->first();
     if (!$invoice) {
         return;
     }
@@ -519,6 +540,16 @@ add_hook('InvoicePaid', 1, function($vars) {
     
     $api_token = $settings['whatsapp_api_token'] ?? '';
     if (empty($api_token)) {
+        return;
+    }
+    
+    // Check if we already sent WhatsApp confirmation for this invoice
+    $alreadySent = \WHMCS\Database\Capsule::table('tblactivitylog')
+        ->where('description', 'like', "%WhatsApp Message Sent%Payment Confirmed%")
+        ->where('description', 'like', "%Invoice #{$invoiceId}%")
+        ->exists();
+    
+    if ($alreadySent) {
         return;
     }
     
@@ -549,9 +580,9 @@ add_hook('InvoicePaid', 1, function($vars) {
     $result = sendWhatsAppTemplate($phoneNumber, 'payment_confirmed_new', $parameters, $api_token);
     
     if ($result) {
-        logActivity("WhatsApp Message Sent: {$phoneNumber} - ✅ Payment Confirmed");
+        logActivity("WhatsApp Message Sent: {$phoneNumber} - ✅ Payment Confirmed - Invoice #{$invoice->id} ({$type})");
     }
-});
+}
 
 /**
  * Hook: Service Suspension Detection
