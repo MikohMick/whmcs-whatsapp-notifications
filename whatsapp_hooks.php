@@ -36,6 +36,33 @@ function cleanPhoneNumber($phoneNumber) {
 }
 
 /**
+ * Helper function to get invoice line items formatted as text
+ * Fetches items from tblinvoiceitems and formats each with description and amount
+ * Example output: "Business Hosting - example.com (01/01/2026 - 01/01/2027) KSH 5,000.00"
+ */
+function getInvoiceItemsText($invoiceId) {
+    $items = \WHMCS\Database\Capsule::table('tblinvoiceitems')
+        ->where('invoiceid', $invoiceId)
+        ->get();
+
+    if ($items->isEmpty()) {
+        return '';
+    }
+
+    $lines = [];
+    foreach ($items as $item) {
+        $description = trim($item->description);
+        if (empty($description)) {
+            continue;
+        }
+        $amount = number_format((float)$item->amount, 2);
+        $lines[] = $description . ' KSH ' . $amount;
+    }
+
+    return implode("\n", $lines);
+}
+
+/**
  * Helper function to get available templates from MessageMarvel
  */
 function getAvailableTemplates($api_token) {
@@ -233,8 +260,11 @@ function whatsapp_send_payment_reminder_template($invoiceId, $type = 'unknown') 
     // Get settings with fallbacks
     $websiteUrl = $settings['website_url'] ?? 'https://your-website.com';
     
+    // Get invoice line items
+    $invoiceItems = getInvoiceItemsText($invoiceId);
+
     // Prepare template parameters for payment_reminder_new template
-    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=due_date, {{5}}=email, {{6}}=payment_url
+    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=due_date, {{5}}=email, {{6}}=payment_url, {{7}}=invoice_items
     $parameters = [
         [
             'type' => 'text',
@@ -259,9 +289,13 @@ function whatsapp_send_payment_reminder_template($invoiceId, $type = 'unknown') 
         [
             'type' => 'text',
             'text' => $websiteUrl . '/whmcs/viewinvoice.php?id=' . $invoice->id
+        ],
+        [
+            'type' => 'text',
+            'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
         ]
     ];
-    
+
     // Send template message
     $result = sendWhatsAppTemplate($phoneNumber, 'payment_reminder_new', $parameters, $api_token);
     
@@ -342,9 +376,12 @@ function whatsapp_send_overdue_notice_template($invoiceId, $emailType) {
     // Get settings with fallbacks
     $websiteUrl = $settings['website_url'] ?? 'https://your-website.com';
     
+    // Get invoice line items
+    $invoiceItems = getInvoiceItemsText($invoiceId);
+
     // Prepare template parameters based on urgency level
     if ($urgencyLevel === 1) {
-        // Level 1: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=due_date, {{6}}=email, {{7}}=payment_url
+        // Level 1: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=due_date, {{6}}=email, {{7}}=payment_url, {{8}}=invoice_items
         $parameters = [
             [
                 'type' => 'text',
@@ -373,10 +410,14 @@ function whatsapp_send_overdue_notice_template($invoiceId, $emailType) {
             [
                 'type' => 'text',
                 'text' => $websiteUrl . '/whmcs/viewinvoice.php?id=' . $invoice->id
+            ],
+            [
+                'type' => 'text',
+                'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
             ]
         ];
     } else {
-        // Level 2 & 3: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=email, {{6}}=payment_url
+        // Level 2 & 3: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=email, {{6}}=payment_url, {{7}}=invoice_items
         $parameters = [
             [
                 'type' => 'text',
@@ -401,6 +442,10 @@ function whatsapp_send_overdue_notice_template($invoiceId, $emailType) {
             [
                 'type' => 'text',
                 'text' => $websiteUrl . '/whmcs/viewinvoice.php?id=' . $invoice->id
+            ],
+            [
+                'type' => 'text',
+                'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
             ]
         ];
     }
@@ -452,8 +497,11 @@ add_hook('InvoiceCreation', 1, function($vars) {
     // Get settings with fallbacks
     $websiteUrl = $settings['website_url'] ?? 'https://your-website.com';
     
+    // Get invoice line items
+    $invoiceItems = getInvoiceItemsText($vars['invoiceid']);
+
     // Prepare template parameters for invoice_created_hosting template
-    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=due_date, {{5}}=email, {{6}}=payment_url
+    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=due_date, {{5}}=email, {{6}}=payment_url, {{7}}=invoice_items
     $parameters = [
         [
             'type' => 'text',
@@ -478,9 +526,13 @@ add_hook('InvoiceCreation', 1, function($vars) {
         [
             'type' => 'text',
             'text' => $websiteUrl . '/whmcs/viewinvoice.php?id=' . $invoice->id
+        ],
+        [
+            'type' => 'text',
+            'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
         ]
     ];
-    
+
     // Send template message
     $result = sendWhatsAppTemplate($phoneNumber, 'invoice_created_hosting', $parameters, $api_token);
     
@@ -555,8 +607,11 @@ function whatsapp_send_payment_confirmation($invoiceId, $type = 'unknown') {
     
     $phoneNumber = cleanPhoneNumber($phoneNumber);
     
+    // Get invoice line items
+    $invoiceItems = getInvoiceItemsText($invoiceId);
+
     // Prepare template parameters for payment_confirmed_new template
-    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=email
+    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=email, {{5}}=invoice_items
     $parameters = [
         [
             'type' => 'text',
@@ -573,9 +628,13 @@ function whatsapp_send_payment_confirmation($invoiceId, $type = 'unknown') {
         [
             'type' => 'text',
             'text' => $client->email
+        ],
+        [
+            'type' => 'text',
+            'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
         ]
     ];
-    
+
     // Send template message
     $result = sendWhatsAppTemplate($phoneNumber, 'payment_confirmed_new', $parameters, $api_token);
     
