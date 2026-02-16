@@ -260,11 +260,8 @@ function whatsapp_send_payment_reminder_template($invoiceId, $type = 'unknown') 
     // Get settings with fallbacks
     $websiteUrl = $settings['website_url'] ?? 'https://your-website.com';
     
-    // Get invoice line items
-    $invoiceItems = getInvoiceItemsText($invoiceId);
-
     // Prepare template parameters for payment_reminder_new template
-    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=due_date, {{5}}=email, {{6}}=payment_url, {{7}}=invoice_items
+    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=due_date, {{5}}=email, {{6}}=payment_url
     $parameters = [
         [
             'type' => 'text',
@@ -289,10 +286,6 @@ function whatsapp_send_payment_reminder_template($invoiceId, $type = 'unknown') 
         [
             'type' => 'text',
             'text' => $websiteUrl . '/whmcs/viewinvoice.php?id=' . $invoice->id
-        ],
-        [
-            'type' => 'text',
-            'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
         ]
     ];
 
@@ -376,12 +369,9 @@ function whatsapp_send_overdue_notice_template($invoiceId, $emailType) {
     // Get settings with fallbacks
     $websiteUrl = $settings['website_url'] ?? 'https://your-website.com';
     
-    // Get invoice line items
-    $invoiceItems = getInvoiceItemsText($invoiceId);
-
     // Prepare template parameters based on urgency level
     if ($urgencyLevel === 1) {
-        // Level 1: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=due_date, {{6}}=email, {{7}}=payment_url, {{8}}=invoice_items
+        // Level 1: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=due_date, {{6}}=email, {{7}}=payment_url
         $parameters = [
             [
                 'type' => 'text',
@@ -410,14 +400,10 @@ function whatsapp_send_overdue_notice_template($invoiceId, $emailType) {
             [
                 'type' => 'text',
                 'text' => $websiteUrl . '/whmcs/viewinvoice.php?id=' . $invoice->id
-            ],
-            [
-                'type' => 'text',
-                'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
             ]
         ];
     } else {
-        // Level 2 & 3: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=email, {{6}}=payment_url, {{7}}=invoice_items
+        // Level 2 & 3: {{1}}=name, {{2}}=invoice_id, {{3}}=days_overdue, {{4}}=amount, {{5}}=email, {{6}}=payment_url
         $parameters = [
             [
                 'type' => 'text',
@@ -442,10 +428,6 @@ function whatsapp_send_overdue_notice_template($invoiceId, $emailType) {
             [
                 'type' => 'text',
                 'text' => $websiteUrl . '/whmcs/viewinvoice.php?id=' . $invoice->id
-            ],
-            [
-                'type' => 'text',
-                'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
             ]
         ];
     }
@@ -607,11 +589,8 @@ function whatsapp_send_payment_confirmation($invoiceId, $type = 'unknown') {
     
     $phoneNumber = cleanPhoneNumber($phoneNumber);
     
-    // Get invoice line items
-    $invoiceItems = getInvoiceItemsText($invoiceId);
-
     // Prepare template parameters for payment_confirmed_new template
-    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=email, {{5}}=invoice_items
+    // Template variables: {{1}}=name, {{2}}=invoice_id, {{3}}=amount, {{4}}=email
     $parameters = [
         [
             'type' => 'text',
@@ -628,10 +607,6 @@ function whatsapp_send_payment_confirmation($invoiceId, $type = 'unknown') {
         [
             'type' => 'text',
             'text' => $client->email
-        ],
-        [
-            'type' => 'text',
-            'text' => !empty($invoiceItems) ? $invoiceItems : 'N/A'
         ]
     ];
 
